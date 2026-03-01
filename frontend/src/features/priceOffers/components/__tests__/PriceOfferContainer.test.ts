@@ -52,7 +52,7 @@ function renderComponent() {
 
 describe('PriceOfferContainer', () => {
   beforeEach(() => {
-    vi.mocked(usePriceOffers).mockReturnValue({
+    vi.mocked(usePriceOffers as ReturnType<typeof vi.fn>).mockReturnValue({
       data: dataRef,
       error: errorRef,
       isPending: isPendingRef,
@@ -60,7 +60,7 @@ describe('PriceOfferContainer', () => {
       isLoading: isLoadingRef,
       isRefetching: isRefetchingRef,
       refetch: refetchMock,
-    } as any);
+    });
 
     mockRoute.query = {};
     mockReplace.mockReset();
