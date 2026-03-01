@@ -72,7 +72,7 @@
 import { ref, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { usePriceOffers } from '../composables/usePriceOffers';
-import type { PriceOffer } from '../types';
+import { getUniqueOptions } from '../utils/getUniqueOptions';
 import PriceOfferList from './PriceOfferList.vue';
 import Select from '../../../components/Select.vue';
 import Button from '../../../components/Button.vue';
@@ -109,17 +109,6 @@ onUnmounted(() => {
 
 const { data, error, isPending, isError, isLoading, isRefetching, refetch } =
   usePriceOffers();
-
-const getUniqueOptions = (
-  items: PriceOffer[] | undefined,
-  key: keyof PriceOffer,
-) => {
-  if (!items) return [];
-  return [...new Set(items.map((item) => item[key]))].map((val) => ({
-    name: String(val),
-    code: String(val),
-  }));
-};
 
 // Computed to generate the origins options based on the fetched data
 const originOptions = computed(() => getUniqueOptions(data.value, 'origin'));
