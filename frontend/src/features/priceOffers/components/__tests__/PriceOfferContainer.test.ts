@@ -1,31 +1,9 @@
-import { describe, test, expect, beforeEach, vi } from 'vitest';
+import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import { ref } from 'vue';
 import PriceOfferContainer from '../PriceOfferContainer.vue';
-
-
-const mockRoute: { query: Record<string, string> } = { query: {} };
-const mockReplace = vi.fn();
-
-vi.mock('vue-router', () => ({
-  useRoute: () => mockRoute,
-  useRouter: () => ({ replace: mockReplace }),
-}));
-
-vi.mock('@tanstack/vue-query', () => {
-  return {
-    useQuery: () => ({
-      data: dataRef,
-      error: errorRef,
-      isPending: isPendingRef,
-      isError: isErrorRef,
-      isRefetching: ref(false),
-      isLoading: isLoadingRef,
-      refetch: vi.fn(),
-    }),
-  };
-});
+import { usePriceOffers } from '../../composables/usePriceOffers';
 
 const mockOffers = [
   {
@@ -50,6 +28,9 @@ const mockOffers = [
   },
 ];
 
+const mockRoute: { query: Record<string, string> } = { query: {} };
+const mockReplace = vi.fn();
+
 const dataRef = ref(mockOffers);
 const errorRef = ref<unknown>(null);
 const isPendingRef = ref(false);
@@ -58,34 +39,42 @@ const isLoadingRef = ref(false);
 const isRefetchingRef = ref(false);
 const refetchMock = vi.fn();
 
-vi.mock('../composables/usePriceOffers', () => ({
-  usePriceOffers: () => ({
-    data: dataRef,
-    error: errorRef,
-    isPending: isPendingRef,
-    isError: isErrorRef,
-    isLoading: isLoadingRef,
-    isRefetching: isRefetchingRef,
-    refetch: refetchMock,
-  }),
+vi.mock('vue-router', () => ({
+  useRoute: () => mockRoute,
+  useRouter: () => ({ replace: mockReplace }),
 }));
+
+vi.mock('../../composables/usePriceOffers');
 
 function renderComponent() {
   return render(PriceOfferContainer);
 }
 
-beforeEach(() => {
-  mockRoute.query = {};
-  mockReplace.mockReset();
-
-  dataRef.value = mockOffers;
-  errorRef.value = null;
-  isPendingRef.value = false;
-  isErrorRef.value = false;
-  isLoadingRef.value = false;
-});
-
 describe('PriceOfferContainer', () => {
+  beforeEach(() => {
+    vi.mocked(usePriceOffers).mockReturnValue({
+      data: dataRef,
+      error: errorRef,
+      isPending: isPendingRef,
+      isError: isErrorRef,
+      isLoading: isLoadingRef,
+      isRefetching: isRefetchingRef,
+      refetch: refetchMock,
+    } as any);
+
+    mockRoute.query = {};
+    mockReplace.mockReset();
+    dataRef.value = mockOffers;
+    errorRef.value = null;
+    isPendingRef.value = false;
+    isErrorRef.value = false;
+    isLoadingRef.value = false;
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   describe('Unit-style behavior (filters and routing)', () => {
     test('renders heading, filters and disabled reset button initially', () => {
       renderComponent();
@@ -117,7 +106,8 @@ describe('PriceOfferContainer', () => {
     });
 
     test('updates router query when filters change', async () => {
-      const user = userEvent.setup();
+      vi.useFakeTimers();
+      const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
       renderComponent();
 
       const selects = screen.getAllByRole('combobox');
@@ -127,8 +117,8 @@ describe('PriceOfferContainer', () => {
       await user.selectOptions(originSelect, 'BER');
       await user.selectOptions(destinationSelect, 'BCN');
 
-      // Wait for debounce timer in the watcher
-      await new Promise((resolve) => setTimeout(resolve, 350));
+      // Fast-forward time until all timers have been executed
+      await vi.runAllTimersAsync();
 
       expect(mockReplace).toHaveBeenCalled();
       const lastCall =
@@ -170,18 +160,10 @@ describe('PriceOfferContainer', () => {
       renderComponent();
 
       // Options for unique origins/destinations from mockOffers
-      expect(
-        screen.getByRole('option', { name: 'BER' }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('option', { name: 'MAD' }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('option', { name: 'BCN' }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole('option', { name: 'LHR' }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'BER' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'MAD' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'BCN' })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: 'LHR' })).toBeInTheDocument();
     });
 
     test('filters rendered offers when origin filter changes', async () => {

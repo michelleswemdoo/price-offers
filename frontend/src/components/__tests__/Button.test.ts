@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import Button from '../Button.vue';
 
 describe('Button component', () => {
- 
   test('renders slot content', () => {
     render(Button, {
       props: { type: 'button' },
@@ -15,7 +14,6 @@ describe('Button component', () => {
     expect(btn).toHaveTextContent('Click me');
   });
 
- 
   test('applies custom type', () => {
     render(Button, {
       props: { type: 'submit' },
@@ -47,7 +45,6 @@ describe('Button component', () => {
     expect(btn).toHaveClass('cursor-not-allowed');
   });
 
- 
   test('emits click event when enabled', async () => {
     const user = userEvent.setup();
     const { emitted } = render(Button, {
@@ -58,7 +55,8 @@ describe('Button component', () => {
     const btn = screen.getByRole('button');
     await user.click(btn);
 
-    expect(emitted().click).toHaveLength(1);
+    expect(emitted('click')).toBeTruthy();
+    expect(emitted('click')).toHaveLength(1);
   });
 
   test('does not emit click event when disabled', async () => {
@@ -71,6 +69,6 @@ describe('Button component', () => {
     const btn = screen.getByRole('button');
     await user.click(btn);
 
-    expect(emitted().click).toBeUndefined();
+    expect(emitted('click')).toBeUndefined();
   });
 });

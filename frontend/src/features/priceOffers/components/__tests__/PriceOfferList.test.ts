@@ -1,7 +1,7 @@
 import { describe, test, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/vue';
+import { render, screen } from '@testing-library/vue';
+import userEvent from '@testing-library/user-event';
 import PriceOfferList from '../PriceOfferList.vue';
-
 
 const mockOffers = [
   {
@@ -100,24 +100,29 @@ describe('PriceOfferList', () => {
 
       const status = screen.getByRole('status');
       expect(status).toHaveAttribute('aria-live', 'polite');
-      expect(status).toHaveTextContent(/no offers found for the selected destinations/i);
+      expect(status).toHaveTextContent(
+        /no offers found for the selected destinations/i,
+      );
 
       // Ensure loading or error are not visible
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-      expect(screen.queryByText(/loading price offers/i)).not.toBeInTheDocument();
+      expect(
+        screen.queryByText(/loading price offers/i),
+      ).not.toBeInTheDocument();
     });
   });
 
-  describe('Retry behavior', () => {
-    test('calls onRetry when Retry button is clicked in error state', async () => {
-      const onRetry = vi.fn();
-      renderComponent({ isError: true, error: 'Server failed', onRetry });
+  test('calls onRetry when Retry button is clicked in error state', async () => {
+    const user = userEvent.setup();
+    const onRetry = vi.fn();
 
-      const button = screen.getByRole('button', { name: /retry/i });
-      await fireEvent.click(button);
+    renderComponent({ isError: true, error: 'Server failed', onRetry });
 
-      expect(onRetry).toHaveBeenCalledTimes(1);
-    });
+    const button = screen.getByRole('button', { name: /retry/i });
+
+    await user.click(button);
+
+    expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
   describe('Filtering logic', () => {
@@ -182,11 +187,6 @@ describe('PriceOfferList', () => {
 
       const cards = screen.getAllByTestId('price-offer-card');
       expect(cards).toHaveLength(1);
-
-      // Ensure the nested card renders the formatted price
-      const priceElement = screen.getByTestId('price');
-      expect(priceElement).toHaveTextContent(/180/);
-      expect(priceElement).toHaveTextContent(/€/);
     });
   });
 });

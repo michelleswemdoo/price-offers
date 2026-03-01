@@ -1,10 +1,6 @@
 <template>
   <!-- Loading state -->
-  <StatusBanner
-    v-if="isLoading || isPending"
-    role="status"
-    aria-live="polite"
-  >
+  <StatusBanner v-if="isLoading || isPending" role="status" aria-live="polite">
     <template #icon>
       <Spinner />
     </template>

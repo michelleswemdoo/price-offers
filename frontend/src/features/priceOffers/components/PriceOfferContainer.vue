@@ -16,7 +16,8 @@
             Filter offers
           </h2>
           <p class="text-sm text-gray-600">
-            Choose an origin and destination to narrow down the available offers.
+            Choose an origin and destination to narrow down the available
+            offers.
           </p>
         </div>
       </div>
@@ -68,9 +69,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onUnmounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { usePriceOffers } from '../composables/usePriceOffers';
+import type { PriceOffer } from '../types';
 import PriceOfferList from './PriceOfferList.vue';
 import Select from '../../../components/Select.vue';
 import Button from '../../../components/Button.vue';
@@ -83,45 +85,48 @@ const selectedDestination = ref((route.query.destination as string) || '');
 
 let updateQueryTimeout: ReturnType<typeof setTimeout> | null = null;
 
-watch(
-  [selectedOrigin, selectedDestination],
-  ([newOrigin, newDestination]) => {
-    if (updateQueryTimeout) {
-      clearTimeout(updateQueryTimeout);
-    }
+watch([selectedOrigin, selectedDestination], ([newOrigin, newDestination]) => {
+  if (updateQueryTimeout) {
+    clearTimeout(updateQueryTimeout);
+  }
 
-    updateQueryTimeout = setTimeout(() => {
-      router.replace({
-        query: {
-          ...route.query,
-          origin: newOrigin || undefined,
-          destination: newDestination || undefined,
-        },
-      });
-    }, 300);
-  },
-);
+  updateQueryTimeout = setTimeout(() => {
+    router.replace({
+      query: {
+        ...route.query,
+        origin: newOrigin || undefined,
+        destination: newDestination || undefined,
+      },
+    });
+  }, 300);
+});
+
+onUnmounted(() => {
+  if (updateQueryTimeout) {
+    clearTimeout(updateQueryTimeout);
+  }
+});
 
 const { data, error, isPending, isError, isLoading, isRefetching, refetch } =
   usePriceOffers();
 
-// Computed to generate the origins options based on the fetched data
+const getUniqueOptions = (
+  items: PriceOffer[] | undefined,
+  key: keyof PriceOffer,
+) => {
+  if (!items) return [];
+  return [...new Set(items.map((item) => item[key]))].map((val) => ({
+    name: String(val),
+    code: String(val),
+  }));
+};
 
-const originOptions = computed(() =>
-  data.value
-    ? [...new Set(data.value.map((offerPrice) => offerPrice.origin))].map(
-        (origin) => ({ name: origin, code: origin }),
-      )
-    : [],
-);
+// Computed to generate the origins options based on the fetched data
+const originOptions = computed(() => getUniqueOptions(data.value, 'origin'));
 
 // Computed to generate the Destinations options based on the fetched data
 const destinationOptions = computed(() =>
-  data.value
-    ? [...new Set(data.value.map((offerPrice) => offerPrice.destination))].map(
-        (destination) => ({ name: destination, code: destination }),
-      )
-    : [],
+  getUniqueOptions(data.value, 'destination'),
 );
 
 const resetFilters = () => {

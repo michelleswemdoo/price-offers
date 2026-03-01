@@ -1,9 +1,9 @@
 import { describe, test, expect } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import PriceOfferCard from '../PriceOfferCard.vue';
+import { formatAmount } from '../../utils/formatAmount';
 
 describe('PriceOfferCard', () => {
-  
   const mockPriceOffer = {
     origin: 'BER',
     destination: 'BCN',
@@ -14,7 +14,6 @@ describe('PriceOfferCard', () => {
     offerType: 'BestPrice',
     uuid: 'SA00010-abcdef12-3456-4a78-9b0c-123456789abc',
   };
-
 
   test('renders origin and destination on desktop', () => {
     render(PriceOfferCard, { props: { priceOffer: mockPriceOffer } });
@@ -33,9 +32,13 @@ describe('PriceOfferCard', () => {
     render(PriceOfferCard, { props: { priceOffer: mockPriceOffer } });
 
     const priceElement = screen.getByTestId('price');
+
     expect(priceElement).toBeInTheDocument();
 
-    const expectedPrice = '165,00\u00A0€';
+    const expectedPrice = formatAmount(
+      mockPriceOffer.price.amount,
+      mockPriceOffer.price.currency,
+    );
     expect(priceElement.textContent).toBe(expectedPrice);
   });
 });

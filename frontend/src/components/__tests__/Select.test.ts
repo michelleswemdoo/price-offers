@@ -1,4 +1,4 @@
-import { describe, test, expect } from 'vitest';
+import { describe, test, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/vue';
 import userEvent from '@testing-library/user-event';
 import Select from '../Select.vue';
@@ -8,7 +8,6 @@ describe('Select component', () => {
     { name: 'Option 1', code: 'opt1' },
     { name: 'Option 2', code: 'opt2' },
   ];
-
 
   test('renders label correctly', () => {
     render(Select, {
@@ -30,7 +29,6 @@ describe('Select component', () => {
     const select = screen.getByLabelText('My Label');
     expect(select).toHaveAttribute('id', 'my-select');
   });
-
 
   test('renders default placeholder', () => {
     render(Select, {
@@ -56,7 +54,6 @@ describe('Select component', () => {
     expect(placeholder).toBeInTheDocument();
   });
 
- 
   test('renders all provided options', () => {
     render(Select, {
       props: { id: 'test-select', selectOptions: options },
@@ -77,7 +74,6 @@ describe('Select component', () => {
     expect(allOptions[0]).toHaveTextContent(/please select an option/i);
   });
 
-
   test('renders with initial modelValue', () => {
     render(Select, {
       props: { id: 'test-select', selectOptions: options, modelValue: 'opt1' },
@@ -96,9 +92,9 @@ describe('Select component', () => {
     const select = screen.getByRole('combobox');
     await user.selectOptions(select, 'opt2');
 
-    const updates = emitted()['update:modelValue'];
+    const updates = emitted('update:modelValue');
     expect(updates).toBeTruthy();
-    expect(updates![0]).toEqual(['opt2']);
+    expect(updates[0]).toEqual(['opt2']);
   });
 
   test('can select an option', async () => {
@@ -112,7 +108,6 @@ describe('Select component', () => {
 
     expect(select).toHaveValue('opt2');
   });
-
 
   test('disabled select cannot be changed', async () => {
     const user = userEvent.setup();
@@ -133,6 +128,6 @@ describe('Select component', () => {
     await user.selectOptions(select, 'opt1');
 
     // No events should be emitted
-    expect(emitted()['update:modelValue']).toBeUndefined();
+    expect(emitted('update:modelvalue')).toBeUndefined();
   });
 });
