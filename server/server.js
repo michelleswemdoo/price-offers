@@ -40,7 +40,7 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 
 // Serve frontend static files
-app.use(express.static(path.join(__dirname, "frontend/dist")));
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 // API: /price-offers
 const priceOffersPath = path.join(__dirname, "mockPriceOffers.json");
@@ -52,7 +52,7 @@ app.get("/price-offers", (_, res) => {
 
 // Serve Vue frontend for any other route (SPA routing)
 app.get("*", (_, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
+  res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
 });
 
 // Start server
